@@ -6,6 +6,8 @@ let handPose;
 let hands = [];
 let circleX, circleY; // 圓的初始位置
 let circleRadius = 50; // 圓的半徑
+let isDragging = false; // 是否正在拖動圓
+let previousX, previousY; // 儲存圓的前一個位置
 
 function preload() {
   // Initialize HandPose model with flipped video input
@@ -31,6 +33,10 @@ function setup() {
 
   // Start detecting hands
   handPose.detectStart(video, gotHands);
+
+  // 初始化前一個位置
+  previousX = circleX;
+  previousY = circleY;
 }
 
 function draw() {
@@ -40,6 +46,15 @@ function draw() {
   fill(0, 0, 255);
   noStroke();
   circle(circleX, circleY, circleRadius * 2);
+
+  // 畫出圓心的軌跡
+  if (isDragging) {
+    stroke(255, 0, 0); // 紅色線條
+    strokeWeight(2);
+    line(previousX, previousY, circleX, circleY);
+    previousX = circleX;
+    previousY = circleY;
+  }
 
   // 確保至少檢測到一隻手
   if (hands.length > 0) {
@@ -59,6 +74,9 @@ function draw() {
           if (dIndex < circleRadius && dThumb < circleRadius) {
             circleX = (indexFinger.x + thumb.x) / 2;
             circleY = (indexFinger.y + thumb.y) / 2;
+            isDragging = true; // 開始畫軌跡
+          } else {
+            isDragging = false; // 停止畫軌跡
           }
         }
 
@@ -85,6 +103,8 @@ function draw() {
         drawFingerLines(hand.keypoints, 17, 20); // Pinky finger
       }
     }
+  } else {
+    isDragging = false; // 停止畫軌跡
   }
 }
 
