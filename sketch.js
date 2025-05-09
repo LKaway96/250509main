@@ -4,6 +4,8 @@
 let video;
 let handPose;
 let hands = [];
+let circleX, circleY; // 圓的初始位置
+let circleRadius = 50; // 圓的半徑
 
 function preload() {
   // Initialize HandPose model with flipped video input
@@ -23,6 +25,10 @@ function setup() {
   video = createCapture(VIDEO, { flipped: true });
   video.hide();
 
+  // 圓的初始位置在視窗中間
+  circleX = width / 2;
+  circleY = height / 2;
+
   // Start detecting hands
   handPose.detectStart(video, gotHands);
 }
@@ -30,10 +36,27 @@ function setup() {
 function draw() {
   image(video, 0, 0);
 
+  // 畫出圓
+  fill(0, 0, 255);
+  noStroke();
+  circle(circleX, circleY, circleRadius * 2);
+
   // Ensure at least one hand is detected
   if (hands.length > 0) {
     for (let hand of hands) {
       if (hand.confidence > 0.1) {
+        // 獲取左手食指的座標 (keypoint 8)
+        if (hand.handedness === "Left") {
+          let indexFinger = hand.keypoints[8];
+          let d = dist(indexFinger.x, indexFinger.y, circleX, circleY);
+
+          // 如果食指碰觸到圓，讓圓跟隨食指移動
+          if (d < circleRadius) {
+            circleX = indexFinger.x;
+            circleY = indexFinger.y;
+          }
+        }
+
         // Loop through keypoints and draw circles
         for (let i = 0; i < hand.keypoints.length; i++) {
           let keypoint = hand.keypoints[i];
