@@ -41,27 +41,32 @@ function draw() {
   noStroke();
   circle(circleX, circleY, circleRadius * 2);
 
-  // Ensure at least one hand is detected
+  // 確保至少檢測到一隻手
   if (hands.length > 0) {
     for (let hand of hands) {
       if (hand.confidence > 0.1) {
-        // 獲取左手食指的座標 (keypoint 8)
+        // 獲取左手食指與大拇指的座標
         if (hand.handedness === "Left") {
           let indexFinger = hand.keypoints[8];
-          let d = dist(indexFinger.x, indexFinger.y, circleX, circleY);
+          let thumb = hand.keypoints[4];
 
-          // 如果食指碰觸到圓，讓圓跟隨食指移動
-          if (d < circleRadius) {
-            circleX = indexFinger.x;
-            circleY = indexFinger.y;
+          // 計算食指與圓心的距離
+          let dIndex = dist(indexFinger.x, indexFinger.y, circleX, circleY);
+          // 計算大拇指與圓心的距離
+          let dThumb = dist(thumb.x, thumb.y, circleX, circleY);
+
+          // 如果食指與大拇指同時碰觸到圓的邊緣，讓圓跟隨手指移動
+          if (dIndex < circleRadius && dThumb < circleRadius) {
+            circleX = (indexFinger.x + thumb.x) / 2;
+            circleY = (indexFinger.y + thumb.y) / 2;
           }
         }
 
-        // Loop through keypoints and draw circles
+        // 繪製手部關節點
         for (let i = 0; i < hand.keypoints.length; i++) {
           let keypoint = hand.keypoints[i];
 
-          // Color-code based on left or right hand
+          // 根據左右手設定顏色
           if (hand.handedness == "Left") {
             fill(255, 0, 255);
           } else {
@@ -72,7 +77,7 @@ function draw() {
           circle(keypoint.x, keypoint.y, 16);
         }
 
-        // Draw lines connecting keypoints for each finger
+        // 繪製手指的連接線
         drawFingerLines(hand.keypoints, 0, 4);  // Thumb
         drawFingerLines(hand.keypoints, 5, 8);  // Index finger
         drawFingerLines(hand.keypoints, 9, 12); // Middle finger
